@@ -1,7 +1,7 @@
 Net
 ============
 
-A simple, fully-connected, C++ neural net project created to help foster a deeper understanding of neural net functionality.
+A simple, fully-connected, C++ neural net API created to help foster a deeper understanding of neural net functionality.
 
 
 
