@@ -20,7 +20,10 @@ public:
   /// \brief ConnectedNet
   /// \param topology
   ////////////////////////////////////////////////////////////////////
-  ConnectedNet( const std::vector< unsigned > &topology );
+  ConnectedNet(
+               const std::vector< unsigned > &topology,
+               double                         errorSmoothing = 0.9
+               );
 
   ////////////////////////////////////////////////////////////////////
   /// \brief feedForward

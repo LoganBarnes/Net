@@ -52,6 +52,7 @@ private:
   std::default_random_engine gen_;
   std::uniform_int_distribution< unsigned > dist_;
 
+  std::vector< double > inputVals_;
   std::vector< double > targetVals_;
 
 
@@ -65,6 +66,7 @@ private:
 XORApp::XORApp( )
   : gen_       ( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) )
   , dist_      ( 0, std::numeric_limits< unsigned >::max( ) )
+  , inputVals_ ( 2 )
   , targetVals_( 1 )
 {}
 
@@ -85,8 +87,13 @@ XORApp::run( )
                 10000
                 );
 
-  std::cout << "Done training" << std::endl;
-  std::cout << "Error: " << cnet.getAverageError( ) << std::endl;
+  std::cout << std::endl;
+  std::cout << "Done training (Error: ";
+  std::cout << cnet.getAverageError( ) << ")" << std::endl;
+  std::cout << std::endl;
+
+  std::cout << "Results: " << std::endl;
+  std::cout << std::endl;
 
 
   std::string line;
@@ -95,14 +102,14 @@ XORApp::run( )
   //
   // test and display trained neural net on new random input
   //
-  while ( std::getline( std::cin, line ) )
+  do
   {
 
-    if ( line == "q"
-        || line == "quit"
-        || line == "exit" )
+    if ( line == "q" )
     {
+
       break;
+
     }
 
     std::vector< double > inputVals = inputFunction( );
@@ -131,7 +138,11 @@ XORApp::run( )
 
     }
 
+    std::cout << std::endl;
+    std::cout << "'Enter' : new random input, 'q' : quit" << std::endl;
+
   }
+  while ( std::getline( std::cin, line ) );
 
 } // XORApp::run
 
@@ -148,15 +159,12 @@ XORApp::inputFunction( )
   int x = dist_( gen_ ) % 2;
   int y = dist_( gen_ ) % 2;
 
-  std::vector< double > inputVals
-  {
-    1.0 * x,
-    1.0 * y
-  };
+  inputVals_[ 0 ] = 1.0 * x;
+  inputVals_[ 1 ] = 1.0 * y;
 
   targetVals_[ 0 ] = 1.0 * ( x ^ y );
 
-  return inputVals;
+  return inputVals_;
 
 } // XORApp::inputFunction
 

@@ -20,10 +20,11 @@
 namespace
 {
 
-constexpr double eyeDist = 2.0;
-constexpr double eyeZoom = 0.9; // used in division (can't be exactly zero)
+constexpr double eyeDist   = 3.0;
+constexpr double focalDist = eyeDist * 0.5;
+constexpr double focalZoom = 1.0;
 
-constexpr unsigned imgSize = 10;
+constexpr unsigned imgSize = 8;
 
 }
 
@@ -69,8 +70,8 @@ public:
                                   unsigned          width,
                                   unsigned          height,
                                   const glm::dvec3 &eye,
-                                  net::Net         *pNet
-                                  ,
+                                  const double      fDist,
+                                  net::Net         *pNet,
                                   bool              exact
                                   );
 
@@ -82,6 +83,8 @@ private:
   std::default_random_engine gen_;
   std::uniform_real_distribution< double >  realDist_;
   std::uniform_int_distribution< unsigned > intDist_;
+
+  double focalDist_;
 
   std::vector< double > inputVals_;
   std::vector< double > targetVals_;
@@ -98,7 +101,8 @@ IntersectionApp::IntersectionApp( )
   : gen_       ( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) )
   , realDist_  ( -1.0, 1.0 )
   , intDist_   ( 0, imgSize )
-  , inputVals_ ( 4 )
+  , focalDist_ ( focalDist )
+  , inputVals_ ( 4, 0.0 )
   , targetVals_( 1 )
 {}
 
@@ -110,13 +114,13 @@ void
 IntersectionApp::run( )
 {
 
-  net::ConnectedNet cnet( std::vector< unsigned >{ 4, 1 } );
+  net::ConnectedNet cnet( std::vector< unsigned >{ 4, 5, 1 }, 0.99 );
 
   cnet.trainNet(
                 std::bind( &IntersectionApp::inputFunction,  this ),
                 std::bind( &IntersectionApp::targetFunction, this ),
-                1.0e-5,
-                100000
+                1.0e-4,
+                10000
                 );
 
   std::cout << std::endl;
@@ -131,7 +135,7 @@ IntersectionApp::run( )
   std::string line;
 
   bool breakLoop = false;
-  double camDist = eyeDist;
+  double fDist   = focalDist;
 
   //
   // test and display trained neural net on new random input
@@ -153,13 +157,13 @@ IntersectionApp::run( )
         break;
 
       case 'w':
-        camDist -= 0.1;
-        camDist  = glm::max( camDist, eyeDist - eyeZoom );
+        fDist += 0.1;
+        fDist  = glm::min( fDist, focalDist + focalZoom );
         break;
 
       case 's':
-        camDist += 0.1;
-        camDist  = glm::min( camDist, eyeDist + eyeZoom );
+        fDist -= 0.1;
+        fDist  = glm::max( fDist, focalDist - focalZoom );
         break;
 
       default:
@@ -176,9 +180,9 @@ IntersectionApp::run( )
 
     }
 
-    glm::dvec3 p ( 0.0, 0.0, camDist );
+    glm::dvec3 p ( 0.0, 0.0, eyeDist );
 
-    std::cout << "Zoom: " << p.z << std::endl;
+    std::cout << "Zoom factor: " << fDist << std::endl;
 
     std::cout << "Expected Output: " << std::endl;
 
@@ -186,7 +190,7 @@ IntersectionApp::run( )
     //
     // build calculated image
     //
-    std::vector< char > image = buildImage( imgSize, imgSize, p, &cnet, true );
+    std::vector< char > image = buildImage( imgSize, imgSize, p, fDist, &cnet, true );
 
     for ( unsigned y = 0; y < imgSize; ++y )
     {
@@ -205,14 +209,13 @@ IntersectionApp::run( )
 
     std::cout << std::endl;
 
-
     std::cout << "Actual Output: " << std::endl;
 
 
     //
     // build expected image
     //
-    image = buildImage( imgSize, imgSize, p, &cnet, false );
+    image = buildImage( imgSize, imgSize, p, fDist, &cnet, false );
 
     for ( unsigned y = 0; y < imgSize; ++y )
     {
@@ -259,7 +262,7 @@ IntersectionApp::inputFunction( )
                              );
 
   glm::dvec3 up = glm::dvec3( 0.0, 1.0, 0.0 ); // up axis of world
-  double f      = eyeDist;                     // distance between eye and focal plane
+  double f      = focalDist;                   // distance between eye and focal plane
 
   // camera basis
   glm::dvec3 w = glm::normalize( -p );
@@ -272,11 +275,11 @@ IntersectionApp::inputFunction( )
 
   glm::dvec3 d = glm::normalize( s.x * u + s.y * v + f * w );
 
+  d = d * 0.5 + 0.5;
 
   inputVals_[ 0 ] = d.x;
   inputVals_[ 1 ] = d.y;
   inputVals_[ 2 ] = d.z;
-  inputVals_[ 3 ] = realDist_( gen_ );
 
   return inputVals_;
 
@@ -300,8 +303,10 @@ IntersectionApp::targetFunction( )
                 inputVals_[ 2 ]
                 );
 
+  d = ( d - 0.5 ) * 2.0;
+
   // set eye point
-  p *= inputVals_[ 3 ] * eyeZoom + eyeDist;
+  p *= eyeDist;
 
   glm::vec4 n = hit::intersectSphere( p, d );
 
@@ -326,6 +331,7 @@ IntersectionApp::buildImage(
                             const unsigned    width,
                             const unsigned    height,
                             const glm::dvec3 &eye,
+                            const double      fDist,
                             net::Net         *pNet,
                             bool              exact
                             )
@@ -333,7 +339,6 @@ IntersectionApp::buildImage(
 
   std::vector< char > image( width * height );
 
-  double distToEye = ( glm::length( eye ) - eyeDist ) / eyeZoom;
   std::vector< double > result;
 
   for ( unsigned y = 0; y < height; ++y )
@@ -345,7 +350,7 @@ IntersectionApp::buildImage(
       glm::dvec2 uv = glm::dvec2( x * 1.0 / width, y * 1.0 / height );
 
       glm::dvec3 up = glm::dvec3( 0.0, 1.0, 0.0 ); // up axis of world
-      double d      = eyeDist;                         // distance between eye and focal plane
+      double f      = fDist;                       // distance between eye and focal plane
 
       // camera basis
       glm::dvec3 w = glm::normalize( -eye );
@@ -356,12 +361,13 @@ IntersectionApp::buildImage(
       glm::dvec2 p = -1.0 + 2.0 * uv;
       p.x *= width * 1.0 / height;
 
-      glm::dvec3 dir = glm::normalize( p.x * u + p.y * v + d * w );
+      glm::dvec3 d = glm::normalize( p.x * u + p.y * v + f * w );
 
-      inputVals_[ 0 ] = dir.x;
-      inputVals_[ 1 ] = dir.y;
-      inputVals_[ 2 ] = dir.z;
-      inputVals_[ 3 ] = distToEye;
+      d = d * 0.5 + 0.5;
+
+      inputVals_[ 0 ] = d.x;
+      inputVals_[ 1 ] = d.y;
+      inputVals_[ 2 ] = d.z;
 
       pNet->feedForward( inputVals_ );
 

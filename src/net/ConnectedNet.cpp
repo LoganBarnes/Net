@@ -24,7 +24,10 @@ public:
   /// \brief NetImpl
   /// \param topology
   ////////////////////////////////////////////////////////////////////
-  NetImpl( const std::vector< unsigned > &topology );
+  NetImpl(
+          const std::vector< unsigned > &topology,
+          double                         errorSmoothing
+          );
 
   ////////////////////////////////////////////////////////////////////
   /// \brief feedForward
@@ -73,10 +76,13 @@ private:
 ////////////////////////////////////////////////////////////////////
 /// \brief NetImpl::NetImpl
 ////////////////////////////////////////////////////////////////////
-NetImpl::NetImpl( const std::vector< unsigned > &topology )
+NetImpl::NetImpl(
+                 const std::vector< unsigned > &topology,
+                 double                         errorSmoothing
+                 )
   : m_error( 0.0 )
   , m_recentAverageError( 1.0 )
-  , m_recentAverageSmoothingFactor( 0.9 )
+  , m_recentAverageSmoothingFactor( errorSmoothing )
 {
 
   unsigned numLayers = topology.size( );
@@ -275,8 +281,11 @@ NetImpl::getAverageError( )
 ///        Simple API wrapper around actual implementation class
 ///
 ////////////////////////////////////////////////////////////////////
-ConnectedNet::ConnectedNet( const std::vector< unsigned > &topology )
-  : netImpl_( new NetImpl( topology ) )
+ConnectedNet::ConnectedNet(
+                           const std::vector< unsigned > &topology,
+                           double                         errorSmoothing
+                           )
+  : netImpl_( new NetImpl( topology, errorSmoothing ) )
 {}
 
 

@@ -61,6 +61,7 @@ private:
   std::default_random_engine gen_;
   std::uniform_int_distribution< unsigned > dist_;
 
+  std::vector< double > inputVals_;
   std::vector< double > targetVals_;
 
 
@@ -74,6 +75,7 @@ private:
 AdditionApp::AdditionApp( )
   : gen_       ( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) )
   , dist_      ( 0, std::numeric_limits< unsigned >::max( ) )
+  , inputVals_ ( 4 )
   , targetVals_( 1 )
 {}
 
@@ -94,8 +96,13 @@ AdditionApp::run( )
                 10000
                 );
 
-  std::cout << "Done training" << std::endl;
-  std::cout << "Error: " << cnet.getAverageError( ) << std::endl;
+  std::cout << std::endl;
+  std::cout << "Done training (Error: ";
+  std::cout << cnet.getAverageError( ) << ")" << std::endl;
+  std::cout << std::endl;
+
+  std::cout << "Results: " << std::endl;
+  std::cout << std::endl;
 
 
   std::string line;
@@ -104,14 +111,14 @@ AdditionApp::run( )
   //
   // test and display trained neural net on new random input
   //
-  while ( std::getline( std::cin, line ) )
+  do
   {
 
-    if ( line == "q"
-        || line == "quit"
-        || line == "exit" )
+    if ( line == "q" )
     {
+
       break;
+
     }
 
     std::vector< double > inputVals = inputFunction( );
@@ -140,7 +147,11 @@ AdditionApp::run( )
 
     }
 
+    std::cout << std::endl;
+    std::cout << "'Enter' : new random input, 'q' : quit" << std::endl;
+
   }
+  while ( std::getline( std::cin, line ) );
 
 } // AdditionApp::run
 
@@ -154,7 +165,7 @@ std::vector< double >
 AdditionApp::inputFunction( )
 {
 
-  std::vector< double > inputVals( 4, 0.0 );
+  inputVals_.assign( 4, 0.0 );
 
   //
   // randomly choose the desired sum then
@@ -172,13 +183,13 @@ AdditionApp::inputFunction( )
 
     unsigned index = dist_( gen_ ) % 4;
     indices.insert( index );
-    inputVals[ index ] = 1.0;
+    inputVals_[ index ] = 1.0;
 
   }
 
   targetVals_[ 0 ] = mult * sum - sub;
 
-  return inputVals;
+  return inputVals_;
 
 } // AdditionApp::inputFunction
 
