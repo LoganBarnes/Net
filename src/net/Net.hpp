@@ -35,10 +35,10 @@ public:
   ///                         informative print statements
   ////////////////////////////////////////////////////////////////////
   void trainNet (
-                 TrainFun inputFun,
-                 TrainFun targetFun,
-                 double   acceptableError = 1.0e-4,
-                 unsigned printFrequency  = 0
+                 TrainFun       inputFun,                 ///< function to produce input values
+                 TrainFun       targetFun,                ///< function to produce target values
+                 const double   acceptableError = 1.0e-4, ///< lowest acceptable error value (defaults to 1.0e-4)
+                 const unsigned printFrequency = 0        ///< number of iterations between informative print statements (defaults to 0 [no printing])
                  );
 
 

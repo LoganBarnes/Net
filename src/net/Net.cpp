@@ -13,18 +13,13 @@ namespace net
 ///        feeding forward input values and back propagating
 ///        target values
 ///
-/// \param inputFun - function to produce input values
-/// \param targetFun - function to produce target values
-/// \param acceptableError - lowest acceptable error value
-/// \param printFrequency - number of iterations between
-///                         informative print statements
 ////////////////////////////////////////////////////////////////////
 void
 Net::trainNet(
-              TrainFun inputFun,
-              TrainFun targetFun,
-              double   acceptableError,
-              unsigned printFrequency
+              TrainFun       inputFun,        ///< function to produce input values
+              TrainFun       targetFun,       ///< function to produce target values
+              const double   acceptableError, ///< lowest acceptable error value (defaults to 1.0e-4)
+              const unsigned printFrequency   ///< number of iterations between informative print statements (defaults to -1 [no printing])
               )
 {
 

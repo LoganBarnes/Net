@@ -10,118 +10,22 @@
 #include <functional>
 #include <stdexcept>
 
+#include "glm/gtx/string_cast.hpp"
+#include "Intersections.hpp"
+
 #include "ConnectedNet.hpp"
+
 
 
 namespace
 {
 
-////////////////////////////////////////////////////////////////////
-/// \brief The Vec struct
-////////////////////////////////////////////////////////////////////
-struct Vec
-{
+constexpr double eyeDist = 2.0;
+constexpr double eyeZoom = 0.9; // used in division (can't be exactly zero)
 
-  double x, y, z;
-
-};
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief dot
-/// \param v1
-/// \param v2
-/// \return
-////////////////////////////////////////////////////////////////////
-inline
-double
-dot(
-    const Vec &v1,
-    const Vec &v2
-    )
-{
-  return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
-
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief length
-/// \param v
-/// \return
-////////////////////////////////////////////////////////////////////
-inline
-double
-length( const Vec &v )
-{
-  return std::sqrt( dot( v, v ) );
-}
-
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief normalize
-/// \param v
-/// \return
-////////////////////////////////////////////////////////////////////
-inline
-Vec
-normalize( const Vec &v )
-{
-  double mag = length( v );
-
-  Vec norm;
-
-  norm.x = v.x / mag;
-  norm.y = v.y / mag;
-  norm.z = v.z / mag;
-
-  return norm;
+constexpr unsigned imgSize = 10;
 
 }
-
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief operator *=
-/// \param v
-/// \param d
-////////////////////////////////////////////////////////////////////
-inline
-void
-operator*=(
-           Vec          &v,
-           const double &d
-           )
-{
-  v.x *= d;
-  v.y *= d;
-  v.z *= d;
-}
-
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief operator +=
-/// \param v
-/// \param d
-////////////////////////////////////////////////////////////////////
-inline
-void
-operator+=(
-           Vec          &v,
-           const double &d
-           )
-{
-  v.x += d;
-  v.y += d;
-  v.z += d;
-}
-
-
-
-}
-
 
 
 ////////////////////////////////////////////////////////////////////
@@ -155,13 +59,31 @@ public:
   std::vector< double > targetFunction ( );
 
 
+  ////////////////////////////////////////////////////////////////////
+  /// \brief buildImage
+  /// \param w
+  /// \param h
+  /// \return
+  ////////////////////////////////////////////////////////////////////
+  std::vector< char > buildImage (
+                                  unsigned          width,
+                                  unsigned          height,
+                                  const glm::dvec3 &eye,
+                                  net::Net         *pNet
+                                  ,
+                                  bool              exact
+                                  );
+
+
 protected:
 
 private:
 
   std::default_random_engine gen_;
-  std::uniform_real_distribution< double > dist_;
+  std::uniform_real_distribution< double >  realDist_;
+  std::uniform_int_distribution< unsigned > intDist_;
 
+  std::vector< double > inputVals_;
   std::vector< double > targetVals_;
 
 
@@ -174,7 +96,9 @@ private:
 ////////////////////////////////////////////////////////////////////
 IntersectionApp::IntersectionApp( )
   : gen_       ( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) )
-  , dist_      ( -1.0, 1.0 )
+  , realDist_  ( -1.0, 1.0 )
+  , intDist_   ( 0, imgSize )
+  , inputVals_ ( 4 )
   , targetVals_( 1 )
 {}
 
@@ -186,78 +110,132 @@ void
 IntersectionApp::run( )
 {
 
-  net::ConnectedNet cnet( std::vector< unsigned >{ 6, 7, 4, 1 } );
+  net::ConnectedNet cnet( std::vector< unsigned >{ 4, 1 } );
 
   cnet.trainNet(
                 std::bind( &IntersectionApp::inputFunction,  this ),
                 std::bind( &IntersectionApp::targetFunction, this ),
-                1.0e-3,
+                1.0e-5,
                 100000
                 );
 
-  std::cout << "Done training" << std::endl;
-  std::cout << "Error: " << cnet.getAverageError( ) << std::endl;
+  std::cout << std::endl;
+  std::cout << "Done training (Error: ";
+  std::cout << cnet.getAverageError( ) << ")" << std::endl;
+  std::cout << std::endl;
+
+  std::cout << "Results: " << std::endl;
+  std::cout << std::endl;
 
 
   std::string line;
-  std::vector< double > resultVals;
+
+  bool breakLoop = false;
+  double camDist = eyeDist;
 
   //
   // test and display trained neural net on new random input
   //
-  while ( std::getline( std::cin, line ) )
+  do
   {
 
-    if ( line == "q"
-        || line == "quit"
-        || line == "exit" )
+    //
+    // check input
+    //
+    if ( line.length( ) > 0 )
     {
-      break;
+
+      switch ( line[ 0 ] )
+      {
+
+      case 'q':
+        breakLoop = true;
+        break;
+
+      case 'w':
+        camDist -= 0.1;
+        camDist  = glm::max( camDist, eyeDist - eyeZoom );
+        break;
+
+      case 's':
+        camDist += 0.1;
+        camDist  = glm::min( camDist, eyeDist + eyeZoom );
+        break;
+
+      default:
+        break;
+
+      } // switch
+
+      if ( breakLoop )
+      {
+
+        break;
+
+      }
+
     }
 
-    std::vector< double > inputVals = inputFunction( );
+    glm::dvec3 p ( 0.0, 0.0, camDist );
 
-    std::cout << "Input:" << std::endl;
+    std::cout << "Zoom: " << p.z << std::endl;
 
-    for ( auto iter = std::begin( inputVals ); iter != std::end( inputVals ); ++iter )
+    std::cout << "Expected Output: " << std::endl;
+
+
+    //
+    // build calculated image
+    //
+    std::vector< char > image = buildImage( imgSize, imgSize, p, &cnet, true );
+
+    for ( unsigned y = 0; y < imgSize; ++y )
     {
 
-      std::cout << ( *iter - 0.5 ) * 2.0 << " ";
+      for ( unsigned x = 0; x < imgSize; ++x )
+      {
+
+        char c = image[ y * imgSize + x ];
+        std::cout << c << ' ';
+
+      }
+
+      std::cout << std::endl;
 
     }
 
     std::cout << std::endl;
 
-    cnet.feedForward( inputVals );
-    cnet.getResults ( &resultVals );
 
-    Vec n, w_i;
-    n.x   = inputVals[ 0 ];
-    n.y   = inputVals[ 1 ];
-    n.z   = inputVals[ 2 ];
-    w_i.x = inputVals[ 3 ];
-    w_i.y = inputVals[ 4 ];
-    w_i.z = inputVals[ 5 ];
+    std::cout << "Actual Output: " << std::endl;
 
-    n   += -0.5;
-    w_i += -0.5;
 
-    n   *= 2.0;
-    w_i *= 2.0;
+    //
+    // build expected image
+    //
+    image = buildImage( imgSize, imgSize, p, &cnet, false );
 
-    double d = dot( n, w_i );
-
-    std::cout << "Output: ";
-
-    for ( auto iter = std::begin( resultVals ); iter != std::end( resultVals ); ++iter )
+    for ( unsigned y = 0; y < imgSize; ++y )
     {
 
-      std::cout << ( *iter  + 1.0 ) * 0.5 << std::endl;
-      std::cout << d << std::endl;
+      for ( unsigned x = 0; x < imgSize; ++x )
+      {
+
+        char c = image[ y * imgSize + x ];
+        std::cout << c << ' ';
+
+      }
+
+      std::cout << std::endl;
 
     }
 
+    std::cout << std::endl;
+
+    std::cout << "'w' : zoom in, 's' : zoom out, 'q' : quit" << std::endl;
+
   }
+  while ( std::getline( std::cin, line ) );
+
 
 } // IntersectionApp::run
 
@@ -271,44 +249,36 @@ std::vector< double >
 IntersectionApp::inputFunction( )
 {
 
-  Vec n, w_i;
+  glm::dvec3 p( 0.0, 0.0, 1.0 );
 
-  n.x   = dist_( gen_ );
-  n.y   = dist_( gen_ );
-  n.z   = dist_( gen_ );
-  w_i.x = dist_( gen_ );
-  w_i.y = dist_( gen_ );
-  w_i.z = dist_( gen_ );
+  p = glm::normalize( p );
 
-  // normalize
-  n = normalize( n );
+  glm::dvec2 uv = glm::dvec2(
+                             intDist_( gen_ ) * 1.0 / imgSize,
+                             intDist_( gen_ ) * 1.0 / imgSize
+                             );
 
-  w_i = normalize( w_i );
+  glm::dvec3 up = glm::dvec3( 0.0, 1.0, 0.0 ); // up axis of world
+  double f      = eyeDist;                     // distance between eye and focal plane
 
-  if ( dot( n, w_i ) < 0.0 )
-  {
-    n *= -1.0;
-  }
+  // camera basis
+  glm::dvec3 w = glm::normalize( -p );
+  glm::dvec3 u = glm::normalize( cross( w, up ) );
+  glm::dvec3 v = glm::normalize( cross( u, w ) );
 
-  n   *= 0.5;
-  w_i *= 0.5;
+  // pixel space of the focal plane
+  glm::dvec2 s = -1.0 + 2.0 * uv;
+  s.x *= imgSize * 1.0 / imgSize;
 
-  n   += 0.5;
-  w_i += 0.5;
+  glm::dvec3 d = glm::normalize( s.x * u + s.y * v + f * w );
 
-  std::vector< double > inputVals
-  {
-    n.x,
-    n.y,
-    n.z,
-    w_i.x,
-    w_i.y,
-    w_i.z
-  };
 
-  targetVals_[ 0 ] = dot( n, w_i ) * 2.0 - 1.0;
+  inputVals_[ 0 ] = d.x;
+  inputVals_[ 1 ] = d.y;
+  inputVals_[ 2 ] = d.z;
+  inputVals_[ 3 ] = realDist_( gen_ );
 
-  return inputVals;
+  return inputVals_;
 
 } // IntersectionApp::inputFunction
 
@@ -322,9 +292,101 @@ std::vector< double >
 IntersectionApp::targetFunction( )
 {
 
+  glm::dvec3 p ( 0.0, 0.0, 1.0 );
+
+  glm::dvec3 d (
+                inputVals_[ 0 ],
+                inputVals_[ 1 ],
+                inputVals_[ 2 ]
+                );
+
+  // set eye point
+  p *= inputVals_[ 3 ] * eyeZoom + eyeDist;
+
+  glm::vec4 n = hit::intersectSphere( p, d );
+
+  targetVals_[ 0 ] = n.w == std::numeric_limits< double >::infinity( ) ? -1.0 : 1.0;
+
   return targetVals_;
 
-}
+} // IntersectionApp::targetFunction
+
+
+
+////////////////////////////////////////////////////////////////////
+/// \brief IntersectionApp::buildImage
+/// \param w
+/// \param h
+/// \param eye
+/// \param pNet
+/// \return
+////////////////////////////////////////////////////////////////////
+std::vector< char >
+IntersectionApp::buildImage(
+                            const unsigned    width,
+                            const unsigned    height,
+                            const glm::dvec3 &eye,
+                            net::Net         *pNet,
+                            bool              exact
+                            )
+{
+
+  std::vector< char > image( width * height );
+
+  double distToEye = ( glm::length( eye ) - eyeDist ) / eyeZoom;
+  std::vector< double > result;
+
+  for ( unsigned y = 0; y < height; ++y )
+  {
+
+    for ( unsigned x = 0; x < width; ++x )
+    {
+
+      glm::dvec2 uv = glm::dvec2( x * 1.0 / width, y * 1.0 / height );
+
+      glm::dvec3 up = glm::dvec3( 0.0, 1.0, 0.0 ); // up axis of world
+      double d      = eyeDist;                         // distance between eye and focal plane
+
+      // camera basis
+      glm::dvec3 w = glm::normalize( -eye );
+      glm::dvec3 u = glm::normalize( cross( w, up ) );
+      glm::dvec3 v = glm::normalize( cross( u, w ) );
+
+      // pixel space of the focal plane
+      glm::dvec2 p = -1.0 + 2.0 * uv;
+      p.x *= width * 1.0 / height;
+
+      glm::dvec3 dir = glm::normalize( p.x * u + p.y * v + d * w );
+
+      inputVals_[ 0 ] = dir.x;
+      inputVals_[ 1 ] = dir.y;
+      inputVals_[ 2 ] = dir.z;
+      inputVals_[ 3 ] = distToEye;
+
+      pNet->feedForward( inputVals_ );
+
+      if ( exact )
+      {
+
+        result = targetFunction( );
+
+      }
+      else
+      {
+
+        pNet->getResults ( &result );
+
+      }
+
+      image[ y * width + x ] = ( result[ 0 ] > 0.0 ? '0' : ' ' );
+
+    }
+
+  }
+
+  return image;
+
+} // IntersectionApp::buildImage
 
 
 

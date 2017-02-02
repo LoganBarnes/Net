@@ -3,7 +3,8 @@ project( NetExamples )
 
 option( STRICT_FLAGS "Use strict compile flags on Unix machines" OFF )
 
-set( SRC_DIR ${PROJECT_SOURCE_DIR}/src )
+set( SRC_DIR    ${PROJECT_SOURCE_DIR}/src        )
+set( THIRDPARTY ${PROJECT_SOURCE_DIR}/thirdparty )
 
 # strict compile flags
 if ( NOT MSVC AND STRICT_FLAGS )
@@ -21,6 +22,19 @@ endif( )
 add_subdirectory( ${SRC_DIR}/net )
 
 set(
+    SRC_FILES
+
+    ${SRC_DIR}/helpers/Intersections.cpp
+    )
+
+set(
+    INC_DIRS
+
+    ${SRC_DIR}/helpers
+    ${NET_INCLUDE_DIR}
+    )
+
+set(
     EXAMPLE_NAMES
 
     XOR
@@ -32,11 +46,12 @@ foreach( EXAMPLE ${EXAMPLE_NAMES} )
 
   set( EXEC_NAME run${EXAMPLE} )
 
-  add_executable( ${EXEC_NAME} ${SRC_DIR}/exec/${EXAMPLE}.cpp )
+  add_executable( ${EXEC_NAME} ${SRC_DIR}/exec/${EXAMPLE}.cpp ${SRC_FILES}  )
 
-  target_include_directories( ${EXEC_NAME} PUBLIC  ${NET_INCLUDE_DIR} )
-  target_link_libraries     ( ${EXEC_NAME}         ${NET_LIBRARY}     )
-  target_compile_features   ( ${EXEC_NAME} PRIVATE cxx_range_for      )
+  target_include_directories( ${EXEC_NAME} SYSTEM PUBLIC ${THIRDPARTY}/glm  )
+  target_include_directories( ${EXEC_NAME} PUBLIC ${INC_DIRS}               )
+  target_link_libraries     ( ${EXEC_NAME}        ${NET_LIBRARY}            )
+  target_compile_features   ( ${EXEC_NAME} PRIVATE cxx_range_for            )
 
 endforeach( EXAMPLE )
 
