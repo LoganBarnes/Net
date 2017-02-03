@@ -103,9 +103,9 @@ Output: 3
 
 ### Ray-Sphere Intersection
 
-The Intersection program teaches the neural net to calculate intersections between a 3D ray and a sphere. The input to the neural net is the x, y, and z component of the 3D ray. The output is simply a positive or negative number indicating a hit or miss respectively.
+The Intersection program teaches the neural net to calculate intersections between a 3D ray and sphere. The input to the neural net is the x, y, and z component of the 3D ray. The output is simply a positive or negative number indicating a hit or miss respectively.
 
-For the sake of simplicity, the sphere is being *rendered* in the terminal via an 8x8 image of characters where '0' represents part of the sphere and ' ' represents background. The value of each "pixel" is computed by determining if a ray shot from the view point through the pixel would intersection the sphere in the scene. The apparent size of the sphere can then be adjusted by changing the zoom factor used to shoot rays into the scene. Below is sample output from the program after training.
+For the sake of simplicity, the sphere is being *rendered* in the terminal via an 8x8 image of characters where '0' represents part of the sphere and '  ' represents background. The value of each "pixel" is computed by determining if a ray shot from the view point through the pixel would intersection the sphere in the scene. The apparent size of the sphere can then be adjusted by changing the zoom factor used to shoot rays into the scene. Below is sample output from the program after training.
 
 ```bash
 Zoom factor: 1.5
@@ -119,7 +119,7 @@ Expected Output:
         0
 
 
-Actual Output:
+Neural Net Output:
 
 
         0
@@ -144,7 +144,7 @@ Expected Output:
 
 
 
-Actual Output:
+Neural Net Output:
 
 
 
@@ -168,7 +168,7 @@ Expected Output:
     0 0 0 0 0
       0 0 0
 
-Actual Output:
+Neural Net Output:
 
       0 0 0
     0 0 0 0 0
@@ -180,6 +180,8 @@ Actual Output:
 
 'w' : zoom in, 's' : zoom out, 'q' : quit
 ```
+
+Only the extreme limits of the camera zoom are shown above. There are a few in between zoom levels where the limits of the neural network begin to show through slight inaccuracies between the expected and computed output:
 
 ```bash
 Zoom factor: 2
@@ -193,7 +195,7 @@ Expected Output:
     0 0 0 0 0
 
 
-Actual Output:
+Neural Net Output:
 
 
       0 0 0
@@ -218,7 +220,7 @@ Expected Output:
 
 
 
-Actual Output:
+Neural Net Output:
 
 
 

@@ -209,7 +209,7 @@ IntersectionApp::run( )
 
     std::cout << std::endl;
 
-    std::cout << "Actual Output: " << std::endl;
+    std::cout << "Neural Net Output: " << std::endl;
 
 
     //
