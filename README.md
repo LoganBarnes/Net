@@ -4,6 +4,19 @@ Net
 A simple, fully-connected, C++ neural net API created to help foster a deeper understanding of neural net functionality. The basic structure of the neural net is based on this [tutorial](https://vimeo.com/19569529).
 
 
+Build via CMake
+---------------
+
+```bash
+# from command line in
+# project root directory
+mkdir build
+cd build
+cmake ..
+cmake --build .
+```
+
+
 Examples
 --------
 
@@ -181,7 +194,7 @@ Neural Net Output:
 'w' : zoom in, 's' : zoom out, 'q' : quit
 ```
 
-Only the extreme limits of the camera zoom are shown above. There are a few in between zoom levels where the limits of the neural network begin to show through slight inaccuracies between the expected and computed output:
+Only the extreme limits of the camera zoom are shown above. There are a few zoom levels where the limits of the neural network begin to show through slight inaccuracies between the expected and computed output:
 
 ```bash
 Zoom factor: 2
@@ -233,16 +246,7 @@ Neural Net Output:
 ```
 
 
+Future Work
+-----------
+[CNN](https://en.wikipedia.org/wiki/Convolutional_neural_network)s!
 
-
-Build via CMake
----------------
-
-```bash
-# from command line in
-# project root directory
-mkdir build
-cd build
-cmake ..
-cmake --build .
-```
