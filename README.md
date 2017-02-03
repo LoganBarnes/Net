@@ -9,6 +9,8 @@ Examples
 
 Three example programs were created to test the learning capabilities of the neural net. These examples are fairly trivial but still give insight into the advantages of more complex networks.
 
+All of the example programs start by training the net with random input values and correctly computed target values (for back propagation). The average error between the network's values and the expected target values is computed and displayed until the error is below a reasonable threshold:
+
 ```bash
 Error: 0.906008
 Error: 0.00535156
@@ -26,11 +28,14 @@ Error: 0.000628718
 Done training (Error: 9.1413e-05)
 
 Results:
-
 ```
+
+Once the program ceases training it shows what the neural net has learned by selecting more random input and displaying the neural net's computed results.
 
 
 ### XOR
+
+For the XOR program the input is just two random binary integers. If both inputs are the same, the output should be zero. Otherwise the output should be one. Below is sample output from the program.
 
 ```bash
 Input:
@@ -60,6 +65,8 @@ Output: 1
 
 
 ### Addition
+
+For the Addition program the input is now four random binary integers. The output from the neural net should be the sum of all four numbers. Below is sample output from the program.
 
 ```bash
 Input:
@@ -118,6 +125,10 @@ Actual Output:
         0
 
 
+'w' : zoom in, 's' : zoom out, 'q' : quit
+
+...
+
 Zoom factor: 0.5
 Expected Output:
 
@@ -137,6 +148,10 @@ Actual Output:
         0
 
 
+
+'w' : zoom in, 's' : zoom out, 'q' : quit
+
+...
 
 Zoom factor: 2.5
 Expected Output:
@@ -159,6 +174,7 @@ Actual Output:
     0 0 0 0 0
       0 0 0
 
+'w' : zoom in, 's' : zoom out, 'q' : quit
 ```
 
 ```bash
@@ -183,6 +199,10 @@ Actual Output:
       0 0 0
 
 
+'w' : zoom in, 's' : zoom out, 'q' : quit
+
+...
+
 Zoom factor: 1
 Expected Output:
 
@@ -203,7 +223,7 @@ Actual Output:
         0
 
 
-
+'w' : zoom in, 's' : zoom out, 'q' : quit
 ```
 
 
