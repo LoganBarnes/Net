@@ -9,7 +9,7 @@ Examples
 
 Three example programs were created to test the learning capabilities of the neural net. These examples are fairly trivial but still give insight into the advantages of more complex networks.
 
-All of the example programs start by training the net with random input values and correctly computed target values (for back propagation). The average error between the network's values and the expected target values is computed and displayed until the error is below a reasonable threshold:
+All of the example programs start by training the neural net with random input values. The input values are fed into the net followed by the correctly computed target values (for back propagation). The average error between the network's computed values and the expected target values is displayed until the error is below a reasonable threshold and training ceases:
 
 ```bash
 Error: 0.906008
