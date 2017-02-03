@@ -16,9 +16,16 @@ cmake ..
 cmake --build .
 ```
 
+This should create three executables in the build directory:
+* runXOR
+* runAddition
+* runIntersection
 
-Examples
---------
+**Note**: This program has only been tested on OS X thus far.
+
+
+Executables
+-----------
 
 Three example programs were created to test the learning capabilities of the neural net. These examples are fairly trivial but still give insight into the advantages of more complex networks.
 
