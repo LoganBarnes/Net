@@ -98,7 +98,8 @@ solveQuadratic(
                )
 {
 
-  constexpr T EPS = 1.0e-5;
+  constexpr T EPS = T( 1.0e-5 );
+  constexpr T two = T( 2.0 );
 
   if ( glm::abs( a ) < EPS )
   {
@@ -108,19 +109,19 @@ solveQuadratic(
 
   }
 
-  T disc = b * b - 4.0 * a * c;
+  T disc = b * b - T( 4.0 ) * a * c;
 
   // one solution
   if ( glm::abs( disc ) < EPS )
   {
 
-    *pT1 = -b / ( 2.0 * a );
+    *pT1 = -b / ( two * a );
     return 1;
 
   }
 
   // no solutions
-  if ( disc < 0.0 )
+  if ( disc < T( 0.0 ) )
   {
 
     return 0;
@@ -128,8 +129,8 @@ solveQuadratic(
   }
 
   // two solutions (disc > 0)
-  *pT1 = ( -b + glm::sqrt( disc ) ) / ( 2.0 * a );
-  *pT2 = ( -b - glm::sqrt( disc ) ) / ( 2.0 * a );
+  *pT1 = ( -b + glm::sqrt( disc ) ) / ( two * a );
+  *pT2 = ( -b - glm::sqrt( disc ) ) / ( two * a );
   return 2;
 
 } // solveQuadratic
@@ -154,7 +155,7 @@ solveQuadraticA1No2(
                     )
 {
 
-  constexpr T EPS = 1.0e-5;
+  constexpr T EPS = T( 1.0e-5 );
 
   T disc = b * b - c;
 
@@ -168,7 +169,7 @@ solveQuadraticA1No2(
   }
 
   // no solutions
-  if ( disc < 0.0 )
+  if ( disc < T( 0.0 ) )
   {
 
     return 0;

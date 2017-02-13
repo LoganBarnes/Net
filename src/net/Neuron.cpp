@@ -1,4 +1,6 @@
 #include "Neuron.hpp"
+#include <algorithm>
+#include <chrono>
 
 
 namespace net
@@ -14,7 +16,7 @@ constexpr double eta   = 0.15; // overall net training rate [0.0, 1.0]
 constexpr double alpha = 0.5;  // momentum - multiplier of last weight change [0.0, n]
 
 auto seed = std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( );
-std::default_random_engine generator( seed );
+std::default_random_engine generator( static_cast< unsigned >( seed ) );
 std::uniform_real_distribution< double > distribution( 0.0, 1.0 );
 
 

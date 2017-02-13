@@ -9,6 +9,8 @@
 #include <limits>
 #include <functional>
 #include <stdexcept>
+#include <chrono>
+#include <string>
 
 #include "glm/gtx/string_cast.hpp"
 #include "Intersections.hpp"
@@ -98,7 +100,7 @@ private:
 /// \brief IntersectionApp::IntersectionApp
 ////////////////////////////////////////////////////////////////////
 IntersectionApp::IntersectionApp( )
-  : gen_       ( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) )
+  : gen_       ( static_cast< unsigned >( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) ) )
   , realDist_  ( -1.0, 1.0 )
   , intDist_   ( 0, imgSize )
   , focalDist_ ( focalDist )

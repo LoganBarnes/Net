@@ -9,6 +9,8 @@
 #include <limits>
 #include <functional>
 #include <stdexcept>
+#include <chrono>
+#include <string>
 
 #include "ConnectedNet.hpp"
 
@@ -64,7 +66,7 @@ private:
 /// \brief XORApp::XORApp
 ////////////////////////////////////////////////////////////////////
 XORApp::XORApp( )
-  : gen_       ( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) )
+  : gen_       ( static_cast< unsigned >( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) ) )
   , dist_      ( 0, std::numeric_limits< unsigned >::max( ) )
   , inputVals_ ( 2 )
   , targetVals_( 1 )
