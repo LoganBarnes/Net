@@ -186,6 +186,8 @@ IntersectionApp::run( )
 
     std::cout << "Expected Output: " << std::endl;
 
+    // 2d to 1d index calculation
+    auto index = []( auto &x, auto &y ) -> auto { return y * imgSize + x; };
 
     //
     // build calculated image
@@ -198,7 +200,7 @@ IntersectionApp::run( )
       for ( unsigned x = 0; x < imgSize; ++x )
       {
 
-        char c = image[ y * imgSize + x ];
+        char c = image[ index( x, y ) ];
         std::cout << c << ' ';
 
       }
@@ -223,7 +225,7 @@ IntersectionApp::run( )
       for ( unsigned x = 0; x < imgSize; ++x )
       {
 
-        char c = image[ y * imgSize + x ];
+        char c = image[ index( x, y ) ];
         std::cout << c << ' ';
 
       }

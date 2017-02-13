@@ -51,7 +51,7 @@ foreach( EXAMPLE ${EXAMPLE_NAMES} )
   target_include_directories( ${EXEC_NAME} SYSTEM PUBLIC ${THIRDPARTY}/glm  )
   target_include_directories( ${EXEC_NAME} PUBLIC ${INC_DIRS}               )
   target_link_libraries     ( ${EXEC_NAME}        ${NET_LIBRARY}            )
-  target_compile_features   ( ${EXEC_NAME} PRIVATE cxx_range_for            )
+  set_property              ( TARGET ${EXEC_NAME} PROPERTY CXX_STANDARD 14  )
 
 endforeach( EXAMPLE )
 

@@ -30,7 +30,7 @@ public:
   ////////////////////////////////////////////////////////////////////
   /// \brief run
   ////////////////////////////////////////////////////////////////////
-  void run ( );
+  void run( );
 
   ////////////////////////////////////////////////////////////////////
   /// \brief inputFunction
@@ -69,6 +69,43 @@ XORApp::XORApp( )
   , inputVals_ ( 2 )
   , targetVals_( 1 )
 {}
+
+
+
+////////////////////////////////////////////////////////////////////
+/// \brief XORApp::targetFunction
+/// \return
+////////////////////////////////////////////////////////////////////
+std::vector< double >
+XORApp::targetFunction( )
+{
+
+  return targetVals_;
+
+}
+
+
+
+////////////////////////////////////////////////////////////////////
+/// \brief XORApp::inputFunction
+/// \return
+////////////////////////////////////////////////////////////////////
+std::vector< double >
+XORApp::inputFunction( )
+{
+
+  int x = dist_( gen_ ) % 2;
+  int y = dist_( gen_ ) % 2;
+
+  inputVals_[ 0 ] = 1.0 * x;
+  inputVals_[ 1 ] = 1.0 * y;
+
+  targetVals_[ 0 ] = 1.0 * ( x ^ y );
+
+  return inputVals_;
+
+} // XORApp::inputFunction
+
 
 
 ////////////////////////////////////////////////////////////////////
@@ -116,10 +153,10 @@ XORApp::run( )
 
     std::cout << "Input:" << std::endl;
 
-    for ( auto iter = std::begin( inputVals ); iter != std::end( inputVals ); ++iter )
+    for ( auto &val : inputVals )
     {
 
-      std::cout << std::round( *iter ) << " ";
+      std::cout << std::round( val ) << " ";
 
     }
 
@@ -131,10 +168,10 @@ XORApp::run( )
 
     std::cout << "Output: ";
 
-    for ( auto iter = std::begin( resultVals ); iter != std::end( resultVals ); ++iter )
+    for ( auto &val : resultVals )
     {
 
-      std::cout << std::abs( std::round( *iter ) ) << std::endl;
+      std::cout << std::abs( std::round( val ) ) << std::endl;
 
     }
 
@@ -145,42 +182,6 @@ XORApp::run( )
   while ( std::getline( std::cin, line ) );
 
 } // XORApp::run
-
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief XORApp::inputFunction
-/// \return
-////////////////////////////////////////////////////////////////////
-std::vector< double >
-XORApp::inputFunction( )
-{
-
-  int x = dist_( gen_ ) % 2;
-  int y = dist_( gen_ ) % 2;
-
-  inputVals_[ 0 ] = 1.0 * x;
-  inputVals_[ 1 ] = 1.0 * y;
-
-  targetVals_[ 0 ] = 1.0 * ( x ^ y );
-
-  return inputVals_;
-
-} // XORApp::inputFunction
-
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief XORApp::targetFunction
-/// \return
-////////////////////////////////////////////////////////////////////
-std::vector< double >
-XORApp::targetFunction( )
-{
-
-  return targetVals_;
-
-}
 
 
 

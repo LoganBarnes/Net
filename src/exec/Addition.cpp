@@ -125,10 +125,10 @@ AdditionApp::run( )
 
     std::cout << "Input:" << std::endl;
 
-    for ( auto iter = std::begin( inputVals ); iter != std::end( inputVals ); ++iter )
+    for ( auto &val : inputVals )
     {
 
-      std::cout << std::round( *iter ) << " ";
+      std::cout << std::round( val ) << " ";
 
     }
 
@@ -140,10 +140,10 @@ AdditionApp::run( )
 
     std::cout << "Output: ";
 
-    for ( auto iter = std::begin( resultVals ); iter != std::end( resultVals ); ++iter )
+    for ( auto &val : resultVals )
     {
 
-      std::cout << std::round( ( *iter + sub ) / mult ) << std::endl;
+      std::cout << std::round( ( val + sub ) / mult ) << std::endl;
 
     }
 

@@ -10,8 +10,8 @@ namespace net
 namespace
 {
 
-double eta   = 0.15; // overall net training rate [0.0, 1.0]
-double alpha = 0.5;  // momentum - multiplier of last weight change [0.0, n]
+constexpr double eta   = 0.15; // overall net training rate [0.0, 1.0]
+constexpr double alpha = 0.5;  // momentum - multiplier of last weight change [0.0, n]
 
 auto seed = std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( );
 std::default_random_engine generator( seed );
@@ -54,13 +54,15 @@ Neuron::feedForward( const Layer &prevLayer )
 
   double sum = 0.0;
 
-  for ( unsigned n = 0; n < prevLayer.size( ); ++n )
-  {
+  std::for_each (
+                 std::begin( prevLayer ),
+                 std::end( prevLayer ),
+                 [ this, &sum ]( const Neuron &neuron )
+    {
 
-    sum += prevLayer[ n ].getOutputVal( )
-           * prevLayer[ n ].outputWeights_[ myIndex_ ].weight;
+      sum += neuron.getOutputVal( ) * neuron.outputWeights_[ myIndex_ ].weight;
 
-  }
+    } );
 
   outputVal_ = Neuron::transferFunction( sum );
 
@@ -132,10 +134,12 @@ void
 Neuron::updateInputWeights( Layer &prevLayer )
 {
 
-  for ( unsigned n = 0; n < prevLayer.size( ); ++n )
+  std::for_each(
+                std::begin( prevLayer ),
+                std::end( prevLayer ),
+                [ this ]( Neuron &neuron )
   {
 
-    Neuron &neuron        = prevLayer[ n ];
     double oldDeltaWeight = neuron.outputWeights_[ myIndex_ ].deltaWeight;
 
     double newDeltaWeight =
@@ -150,7 +154,7 @@ Neuron::updateInputWeights( Layer &prevLayer )
     neuron.outputWeights_[ myIndex_ ].deltaWeight = newDeltaWeight;
     neuron.outputWeights_[ myIndex_ ].weight     += newDeltaWeight;
 
-  }
+  } );
 
 } // Neuron::updateInputWeights
 
@@ -161,7 +165,7 @@ Neuron::updateInputWeights( Layer &prevLayer )
 /// \return
 ////////////////////////////////////////////////////////////////////
 double
-Neuron::randomWeight()
+Neuron::randomWeight( )
 {
 
   return distribution( generator );
@@ -203,6 +207,7 @@ Neuron::transferFunctionDerivative( double x )
   return 1.0 - x * x;
 
 }
+
 
 
 } // namespace net

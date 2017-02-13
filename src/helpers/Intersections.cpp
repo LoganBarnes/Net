@@ -33,7 +33,7 @@ createONB(
 
   U = glm::cross( n, glm::tvec3< T >( 0.0, 1.0, 0.0 ) );
 
-  if ( glm::dot( U, U ) < 1.e-3 )
+  if ( glm::dot( U, U ) < T( 1.e-3 ) )
   {
 
     U = glm::cross( n, glm::tvec3< T >( 1.0, 0.0, 0.0 ) );
@@ -64,13 +64,13 @@ cosine_sample_hemisphere_z(
   glm::tvec3< T > p;
 
   // Uniformly sample disk.
-  const float r   = glm::sqrt( u1 );
-  const float phi = 2.0 * glm::pi< T >( ) * u2;
+  const T r   = glm::sqrt( u1 );
+  const T phi = T( 2.0 ) * glm::pi< T >( ) * u2;
   p.x = r * glm::cos( phi );
   p.y = r * glm::sin( phi );
 
   // Project up to hemisphere.
-  p.z = sqrtf( fmaxf( 0.0, 1.0 - p.x * p.x - p.y * p.y ) );
+  p.z = glm::sqrt( glm::max( T( 0.0 ), T( 1.0 ) - p.x * p.x - p.y * p.y ) );
 
   return p;
 
@@ -88,7 +88,7 @@ cosine_sample_hemisphere_z(
 /// \return
 ////////////////////////////////////////////////////////////////
 template< typename T >
-int
+auto
 solveQuadratic(
                const T a,   ///< quadratic term
                const T b,   ///< linear term
@@ -99,10 +99,6 @@ solveQuadratic(
 {
 
   constexpr T EPS = 1.0e-5;
-  constexpr T INF = std::numeric_limits< T >::infinity( );
-
-  // intersections, intersectDist1, intersectDist2
-  glm::tvec3< T > t = glm::tvec3< T >( 0.0, INF, INF );
 
   if ( glm::abs( a ) < EPS )
   {
@@ -112,14 +108,13 @@ solveQuadratic(
 
   }
 
-  float disc = b * b - 4.0 * a * c;
+  T disc = b * b - 4.0 * a * c;
 
   // one solution
   if ( glm::abs( disc ) < EPS )
   {
 
     *pT1 = -b / ( 2.0 * a );
-    t.x  = 0.0;
     return 1;
 
   }
@@ -135,6 +130,54 @@ solveQuadratic(
   // two solutions (disc > 0)
   *pT1 = ( -b + glm::sqrt( disc ) ) / ( 2.0 * a );
   *pT2 = ( -b - glm::sqrt( disc ) ) / ( 2.0 * a );
+  return 2;
+
+} // solveQuadratic
+
+
+
+////////////////////////////////////////////////////////////////
+/// \brief solveQuadraticA1No2
+/// \param b
+/// \param c
+/// \param pT1
+/// \param pT2
+/// \return
+////////////////////////////////////////////////////////////////
+template< typename T >
+auto
+solveQuadraticA1No2(
+                    const T b,   ///< linear term
+                    const T c,   ///< constant term
+                    T      *pT1, ///< first solution (if it exists)
+                    T      *pT2  ///< second solution (if it exists)
+                    )
+{
+
+  constexpr T EPS = 1.0e-5;
+
+  T disc = b * b - c;
+
+  // one solution
+  if ( glm::abs( disc ) < EPS )
+  {
+
+    *pT1 = -b;
+    return 1;
+
+  }
+
+  // no solutions
+  if ( disc < 0.0 )
+  {
+
+    return 0;
+
+  }
+
+  // two solutions (disc > 0)
+  *pT1 = ( -b + glm::sqrt( disc ) );
+  *pT2 = ( -b - glm::sqrt( disc ) );
   return 2;
 
 } // solveQuadratic
@@ -195,16 +238,15 @@ intersectSphere(
   glm::tvec4< T > n = glm::tvec4< T >( 0.0, 0.0, 0.0, INF );
 
 
-  T a = d.x * d.x + d.y * d.y + d.z * d.z;
-  T b = 2.0 * p.x * d.x + 2.0 * p.y * d.y + 2.0 * p.z * d.z;
-  T c = p.x * p.x + p.y * p.y + p.z * p.z - radius * radius;
+  T b = glm::dot( p, d );
+  T c = glm::dot( p, p ) - radius * radius;
 
 
   glm::tvec4< T > v;
   T t1, t2;
-  int tees = solveQuadratic< T >( a, b, c, &t1, &t2 );
+  auto solutions = solveQuadraticA1No2< T >( b, c, &t1, &t2 );
 
-  if ( tees > 0 )
+  if ( solutions > 0 )
   {
 
     v = glm::tvec4< T >( p, 1.0 ) + glm::tvec4< T >( d, 0.0 ) * t1;
@@ -224,7 +266,7 @@ intersectSphere(
 
     }
 
-    if ( tees > 1 )
+    if ( solutions > 1 )
     {
 
       v = glm::tvec4< T >( p, 1.0 ) + glm::tvec4< T >( d, 0.0 ) * t2;

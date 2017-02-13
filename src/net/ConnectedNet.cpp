@@ -141,13 +141,14 @@ NetImpl::feedForward( const std::vector< double > &inputVals )
   {
 
     Layer &prevLayer = m_layers[ layerNum - 1 ];
+    Layer &currLayer = m_layers[ layerNum ];
 
-    for ( unsigned n = 0; n < m_layers[ layerNum ].size( ) - 1; ++n )
-    {
+    std::for_each ( currLayer.begin( ), currLayer.end( ) - 1, [ &prevLayer ]( Neuron &neuron )
+      {
 
-      m_layers[ layerNum ][ n ].feedForward( prevLayer );
+        neuron.feedForward( prevLayer );
 
-    }
+      } );
 
   }
 
@@ -208,12 +209,12 @@ NetImpl::backProp( const std::vector< double > &targetVals )
     Layer &hiddenLayer = m_layers[ layerNum     ];
     Layer &nextLayer   = m_layers[ layerNum + 1 ];
 
-    for ( unsigned n = 0; n < hiddenLayer.size( ); ++n )
-    {
+    std::for_each( hiddenLayer.begin( ), hiddenLayer.end( ) - 1, [ &nextLayer ]( Neuron &neuron )
+      {
 
-      hiddenLayer[ n ].calcHiddenGradients( nextLayer );
+        neuron.calcHiddenGradients( nextLayer );
 
-    }
+      } );
 
   }
 
@@ -226,12 +227,12 @@ NetImpl::backProp( const std::vector< double > &targetVals )
     Layer &layer     = m_layers[ layerNum     ];
     Layer &prevLayer = m_layers[ layerNum - 1 ];
 
-    for ( unsigned n = 0; n < layer.size( ) - 1; ++n )
-    {
+    std::for_each ( layer.begin( ), layer.end( ) - 1, [ &prevLayer ]( Neuron &neuron )
+      {
 
-      layer[ n ].updateInputWeights( prevLayer );
+        neuron.updateInputWeights( prevLayer );
 
-    }
+      } );
 
   }
 
