@@ -12,7 +12,7 @@
 #include <chrono>
 #include <string>
 
-#include "ConnectedNet.hpp"
+#include "App.hpp"
 
 
 namespace
@@ -28,7 +28,7 @@ constexpr double sub  = 1.0;
 ////////////////////////////////////////////////////////////////////
 /// \brief The AdditionApp class
 ////////////////////////////////////////////////////////////////////
-class AdditionApp
+class AdditionApp : public App
 {
 
 public:
@@ -38,35 +38,26 @@ public:
   ////////////////////////////////////////////////////////////////////
   AdditionApp( );
 
-  ////////////////////////////////////////////////////////////////////
-  /// \brief run
-  ////////////////////////////////////////////////////////////////////
-  void run ( );
+  ~AdditionApp( ) = default;
 
   ////////////////////////////////////////////////////////////////////
   /// \brief inputFunction
   /// \return
   ////////////////////////////////////////////////////////////////////
-  std::vector< double > inputFunction ( );
+  virtual std::vector< double > inputFunction ( ) final;
 
   ////////////////////////////////////////////////////////////////////
   /// \brief targetFunction
   /// \return
   ////////////////////////////////////////////////////////////////////
-  std::vector< double > targetFunction ( );
+  virtual std::vector< double > targetFunction ( ) final;
 
-
-protected:
-
-private:
-
-  std::default_random_engine gen_;
-  std::uniform_int_distribution< unsigned > dist_;
-
-  std::vector< double > inputVals_;
-  std::vector< double > targetVals_;
-
-
+  ////////////////////////////////////////////////////////////////////
+  /// \brief onUserLoop
+  /// \param line
+  /// \return true if the user loop should continue, false otherwise
+  ////////////////////////////////////////////////////////////////////
+  virtual bool onUserLoop ( const std::string &line ) final;
 
 };
 
@@ -75,88 +66,8 @@ private:
 /// \brief AdditionApp::AdditionApp
 ////////////////////////////////////////////////////////////////////
 AdditionApp::AdditionApp( )
-  : gen_       ( static_cast< unsigned >( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) ) )
-  , dist_      ( 0, std::numeric_limits< unsigned >::max( ) )
-  , inputVals_ ( 4 )
-  , targetVals_( 1 )
+  : App( std::vector< unsigned >{ 4, 5, 3, 1 } )
 {}
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief AdditionApp::run
-////////////////////////////////////////////////////////////////////
-void
-AdditionApp::run( )
-{
-
-  net::ConnectedNet cnet( std::vector< unsigned >{ 4, 5, 3, 1 } );
-
-  cnet.trainNet(
-                std::bind( &AdditionApp::inputFunction,  this ),
-                std::bind( &AdditionApp::targetFunction, this ),
-                1.0e-4,
-                10000
-                );
-
-  std::cout << std::endl;
-  std::cout << "Done training (Error: ";
-  std::cout << cnet.getAverageError( ) << ")" << std::endl;
-  std::cout << std::endl;
-
-  std::cout << "Results: " << std::endl;
-  std::cout << std::endl;
-
-
-  std::string line;
-  std::vector< double > resultVals;
-
-  //
-  // test and display trained neural net on new random input
-  //
-  do
-  {
-
-    if ( line == "q" )
-    {
-
-      break;
-
-    }
-
-    std::vector< double > inputVals = inputFunction( );
-
-    std::cout << "Input:" << std::endl;
-
-    for ( auto &val : inputVals )
-    {
-
-      std::cout << std::round( val ) << " ";
-
-    }
-
-    std::cout << std::endl;
-
-
-    cnet.feedForward( inputVals );
-    cnet.getResults ( &resultVals );
-
-    std::cout << "Output: ";
-
-    for ( auto &val : resultVals )
-    {
-
-      std::cout << std::round( ( val + sub ) / mult ) << std::endl;
-
-    }
-
-    std::cout << std::endl;
-    std::cout << "'Enter' : new random input, 'q' : quit" << std::endl;
-
-  }
-  while ( std::getline( std::cin, line ) );
-
-} // AdditionApp::run
-
 
 
 ////////////////////////////////////////////////////////////////////
@@ -208,6 +119,54 @@ AdditionApp::targetFunction( )
   return targetVals_;
 
 }
+
+
+
+////////////////////////////////////////////////////////////////////
+/// \brief AdditionApp::onUserLoop
+/// \param line
+/// \return true if the user loop should continue, false otherwise
+////////////////////////////////////////////////////////////////////
+bool
+AdditionApp::onUserLoop( const std::string &line )
+{
+
+  if ( line == "q" )
+  {
+
+    return false;
+
+  }
+
+  //
+  // display input
+  //
+  std::vector< double > inputVals = inputFunction( );
+
+  std::cout << "Input:" << std::endl;
+
+  App::printVector( inputVals, []( auto v ) { return std::round( v ); } );
+
+  //
+  // propogate
+  //
+  std::vector< double > resultVals;
+
+  upNet_->feedForward( inputVals );
+  upNet_->getResults ( &resultVals );
+
+  //
+  // display output
+  //
+  std::cout << "Output: ";
+
+  App::printVector( resultVals, []( auto v ) { return std::abs( std::round( ( v + sub ) / mult ) ); } );
+
+  std::cout << "\n'Enter' : new random input, 'q' : quit" << std::endl;
+
+  return true;
+
+} // AdditionApp::onUserLoop
 
 
 

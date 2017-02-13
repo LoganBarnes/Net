@@ -33,12 +33,14 @@ set(
     SRC_FILES
 
     ${SRC_DIR}/helpers/Intersections.cpp
+    ${SRC_DIR}/exec/App.cpp
     )
 
 set(
     INC_DIRS
 
     ${SRC_DIR}/helpers
+    ${SRC_DIR}/exec
     ${NET_INCLUDE_DIR}
     )
 

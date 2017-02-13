@@ -12,14 +12,14 @@
 #include <chrono>
 #include <string>
 
-#include "ConnectedNet.hpp"
+#include "App.hpp"
 
 
 
 ////////////////////////////////////////////////////////////////////
 /// \brief The XORApp class
 ////////////////////////////////////////////////////////////////////
-class XORApp
+class XORApp : public App
 {
 
 public:
@@ -29,33 +29,26 @@ public:
   ////////////////////////////////////////////////////////////////////
   XORApp( );
 
-  ////////////////////////////////////////////////////////////////////
-  /// \brief run
-  ////////////////////////////////////////////////////////////////////
-  void run( );
+  ~XORApp( ) = default;
 
   ////////////////////////////////////////////////////////////////////
   /// \brief inputFunction
   /// \return
   ////////////////////////////////////////////////////////////////////
-  std::vector< double > inputFunction ( );
+  virtual std::vector< double > inputFunction ( ) final;
 
   ////////////////////////////////////////////////////////////////////
   /// \brief targetFunction
   /// \return
   ////////////////////////////////////////////////////////////////////
-  std::vector< double > targetFunction ( );
+  virtual std::vector< double > targetFunction ( ) final;
 
-
-protected:
-
-private:
-
-  std::default_random_engine gen_;
-  std::uniform_int_distribution< unsigned > dist_;
-
-  std::vector< double > inputVals_;
-  std::vector< double > targetVals_;
+  ////////////////////////////////////////////////////////////////////
+  /// \brief onUserLoop
+  /// \param line
+  /// \return true if the user loop should continue, false otherwise
+  ////////////////////////////////////////////////////////////////////
+  virtual bool onUserLoop ( const std::string &line ) final;
 
 };
 
@@ -64,10 +57,7 @@ private:
 /// \brief XORApp::XORApp
 ////////////////////////////////////////////////////////////////////
 XORApp::XORApp( )
-  : gen_       ( static_cast< unsigned >( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) ) )
-  , dist_      ( 0, std::numeric_limits< unsigned >::max( ) )
-  , inputVals_ ( 2 )
-  , targetVals_( 1 )
+  : App( std::vector< unsigned >{ 2, 3, 1 } )
 {}
 
 
@@ -109,79 +99,50 @@ XORApp::inputFunction( )
 
 
 ////////////////////////////////////////////////////////////////////
-/// \brief XORApp::run
+/// \brief XORApp::onUserLoop
+/// \param line
+/// \return true if the user loop should continue, false otherwise
 ////////////////////////////////////////////////////////////////////
-void
-XORApp::run( )
+bool
+XORApp::onUserLoop( const std::string &line )
 {
 
-  net::ConnectedNet cnet( std::vector< unsigned >{ 2, 3, 1 } );
-
-  cnet.trainNet(
-                std::bind( &XORApp::inputFunction,  this ),
-                std::bind( &XORApp::targetFunction, this ),
-                1.0e-4,
-                10000
-                );
-
-  std::cout << std::endl;
-  std::cout << "Done training (Error: ";
-  std::cout << cnet.getAverageError( ) << ")" << std::endl;
-  std::cout << std::endl;
-
-  std::cout << "Results: " << std::endl;
-  std::cout << std::endl;
-
-
-  std::string line;
-  std::vector< double > resultVals;
-
-  //
-  // test and display trained neural net on new random input
-  //
-  do
+  if ( line == "q" )
   {
 
-    if ( line == "q" )
-    {
-
-      break;
-
-    }
-
-    std::vector< double > inputVals = inputFunction( );
-
-    std::cout << "Input:" << std::endl;
-
-    for ( auto &val : inputVals )
-    {
-
-      std::cout << std::round( val ) << " ";
-
-    }
-
-    std::cout << std::endl;
-
-
-    cnet.feedForward( inputVals );
-    cnet.getResults ( &resultVals );
-
-    std::cout << "Output: ";
-
-    for ( auto &val : resultVals )
-    {
-
-      std::cout << std::abs( std::round( val ) ) << std::endl;
-
-    }
-
-    std::cout << std::endl;
-    std::cout << "'Enter' : new random input, 'q' : quit" << std::endl;
+    return false;
 
   }
-  while ( std::getline( std::cin, line ) );
 
-} // XORApp::run
+  //
+  // display input
+  //
+  std::vector< double > inputVals = inputFunction( );
+
+  std::cout << "Input:" << std::endl;
+
+  App::printVector( inputVals, []( auto v ) { return std::round( v ); } );
+
+  //
+  // propogate
+  //
+  std::vector< double > resultVals;
+
+  upNet_->feedForward( inputVals );
+  upNet_->getResults ( &resultVals );
+
+  //
+  // display output
+  //
+  std::cout << "Output: ";
+
+  App::printVector( resultVals, []( auto v ) { return std::abs( std::round( v ) ); } );
+
+  std::cout << "\n'Enter' : new random input, 'q' : quit" << std::endl;
+
+  return true;
+
+} // XORApp::onUserLoop
 
 
 

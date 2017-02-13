@@ -15,16 +15,16 @@
 #include "glm/gtx/string_cast.hpp"
 #include "Intersections.hpp"
 
-#include "ConnectedNet.hpp"
+#include "App.hpp"
 
 
 
 namespace
 {
 
-constexpr double eyeDist   = 3.0;
-constexpr double focalDist = eyeDist * 0.5;
-constexpr double focalZoom = 1.0;
+constexpr double eyeDist    = 3.0;
+constexpr double focalPlane = eyeDist * 0.5;
+constexpr double focalZoom  = 1.0;
 
 constexpr unsigned imgSize = 8;
 
@@ -34,7 +34,7 @@ constexpr unsigned imgSize = 8;
 ////////////////////////////////////////////////////////////////////
 /// \brief The IntersectionApp class
 ////////////////////////////////////////////////////////////////////
-class IntersectionApp
+class IntersectionApp : public App
 {
 
 public:
@@ -44,22 +44,26 @@ public:
   ////////////////////////////////////////////////////////////////////
   IntersectionApp( );
 
-  ////////////////////////////////////////////////////////////////////
-  /// \brief run
-  ////////////////////////////////////////////////////////////////////
-  void run ( );
+  ~IntersectionApp( ) = default;
 
   ////////////////////////////////////////////////////////////////////
   /// \brief inputFunction
   /// \return
   ////////////////////////////////////////////////////////////////////
-  std::vector< double > inputFunction ( );
+  virtual std::vector< double > inputFunction ( ) final;
 
   ////////////////////////////////////////////////////////////////////
   /// \brief targetFunction
   /// \return
   ////////////////////////////////////////////////////////////////////
-  std::vector< double > targetFunction ( );
+  virtual std::vector< double > targetFunction ( ) final;
+
+  ////////////////////////////////////////////////////////////////////
+  /// \brief onUserLoop
+  /// \param line
+  /// \return true if the user loop should continue, false otherwise
+  ////////////////////////////////////////////////////////////////////
+  virtual bool onUserLoop ( const std::string &line ) final;
 
 
   ////////////////////////////////////////////////////////////////////
@@ -72,8 +76,7 @@ public:
                                   unsigned          width,
                                   unsigned          height,
                                   const glm::dvec3 &eye,
-                                  const double      fDist,
-                                  net::Net         *pNet,
+                                  const double      fPlane,
                                   bool              exact
                                   );
 
@@ -82,16 +85,10 @@ protected:
 
 private:
 
-  std::default_random_engine gen_;
   std::uniform_real_distribution< double >  realDist_;
   std::uniform_int_distribution< unsigned > intDist_;
 
-  double focalDist_;
-
-  std::vector< double > inputVals_;
-  std::vector< double > targetVals_;
-
-
+  double focalPlane_;
 
 };
 
@@ -100,151 +97,11 @@ private:
 /// \brief IntersectionApp::IntersectionApp
 ////////////////////////////////////////////////////////////////////
 IntersectionApp::IntersectionApp( )
-  : gen_       ( static_cast< unsigned >( std::chrono::high_resolution_clock::now( ).time_since_epoch( ).count( ) ) )
+  : App( std::vector< unsigned >{ 4, 5, 1 }, 0.99 )
   , realDist_  ( -1.0, 1.0 )
   , intDist_   ( 0, imgSize )
-  , focalDist_ ( focalDist )
-  , inputVals_ ( 4, 0.0 )
-  , targetVals_( 1 )
+  , focalPlane_( focalPlane )
 {}
-
-
-////////////////////////////////////////////////////////////////////
-/// \brief IntersectionApp::run
-////////////////////////////////////////////////////////////////////
-void
-IntersectionApp::run( )
-{
-
-  net::ConnectedNet cnet( std::vector< unsigned >{ 4, 5, 1 }, 0.99 );
-
-  cnet.trainNet(
-                std::bind( &IntersectionApp::inputFunction,  this ),
-                std::bind( &IntersectionApp::targetFunction, this ),
-                1.0e-4,
-                10000
-                );
-
-  std::cout << std::endl;
-  std::cout << "Done training (Error: ";
-  std::cout << cnet.getAverageError( ) << ")" << std::endl;
-  std::cout << std::endl;
-
-  std::cout << "Results: " << std::endl;
-  std::cout << std::endl;
-
-
-  std::string line;
-
-  bool breakLoop = false;
-  double fDist   = focalDist;
-
-  //
-  // test and display trained neural net on new random input
-  //
-  do
-  {
-
-    //
-    // check input
-    //
-    if ( line.length( ) > 0 )
-    {
-
-      switch ( line[ 0 ] )
-      {
-
-      case 'q':
-        breakLoop = true;
-        break;
-
-      case 'w':
-        fDist += 0.1;
-        fDist  = glm::min( fDist, focalDist + focalZoom );
-        break;
-
-      case 's':
-        fDist -= 0.1;
-        fDist  = glm::max( fDist, focalDist - focalZoom );
-        break;
-
-      default:
-        break;
-
-      } // switch
-
-      if ( breakLoop )
-      {
-
-        break;
-
-      }
-
-    }
-
-    glm::dvec3 p ( 0.0, 0.0, eyeDist );
-
-    std::cout << "Zoom factor: " << fDist << std::endl;
-
-    std::cout << "Expected Output: " << std::endl;
-
-    // 2d to 1d index calculation
-    auto index = []( auto &x, auto &y ) -> auto { return y * imgSize + x; };
-
-    //
-    // build calculated image
-    //
-    std::vector< char > image = buildImage( imgSize, imgSize, p, fDist, &cnet, true );
-
-    for ( unsigned y = 0; y < imgSize; ++y )
-    {
-
-      for ( unsigned x = 0; x < imgSize; ++x )
-      {
-
-        char c = image[ index( x, y ) ];
-        std::cout << c << ' ';
-
-      }
-
-      std::cout << std::endl;
-
-    }
-
-    std::cout << std::endl;
-
-    std::cout << "Neural Net Output: " << std::endl;
-
-
-    //
-    // build expected image
-    //
-    image = buildImage( imgSize, imgSize, p, fDist, &cnet, false );
-
-    for ( unsigned y = 0; y < imgSize; ++y )
-    {
-
-      for ( unsigned x = 0; x < imgSize; ++x )
-      {
-
-        char c = image[ index( x, y ) ];
-        std::cout << c << ' ';
-
-      }
-
-      std::cout << std::endl;
-
-    }
-
-    std::cout << std::endl;
-
-    std::cout << "'w' : zoom in, 's' : zoom out, 'q' : quit" << std::endl;
-
-  }
-  while ( std::getline( std::cin, line ) );
-
-
-} // IntersectionApp::run
 
 
 
@@ -266,7 +123,7 @@ IntersectionApp::inputFunction( )
                              );
 
   glm::dvec3 up = glm::dvec3( 0.0, 1.0, 0.0 ); // up axis of world
-  double f      = focalDist;                   // distance between eye and focal plane
+  double f      = focalPlane;                   // distance between eye and focal plane
 
   // camera basis
   glm::dvec3 w = glm::normalize( -p );
@@ -323,6 +180,120 @@ IntersectionApp::targetFunction( )
 
 
 ////////////////////////////////////////////////////////////////////
+/// \brief IntersectionApp::onUserLoop
+/// \param line
+/// \return true if the user loop should continue, false otherwise
+////////////////////////////////////////////////////////////////////
+bool
+IntersectionApp::onUserLoop( const std::string &line )
+{
+
+  bool breakLoop = false;
+
+  //
+  // check input
+  //
+  if ( line.length( ) > 0 )
+  {
+
+    switch ( line[ 0 ] )
+    {
+
+    case 'q':
+      breakLoop = true;
+      break;
+
+    case 'w':
+      focalPlane_ += 0.1;
+      focalPlane_  = glm::min( focalPlane_, focalPlane + focalZoom );
+      break;
+
+    case 's':
+      focalPlane_ -= 0.1;
+      focalPlane_  = glm::max( focalPlane_, focalPlane - focalZoom );
+      break;
+
+    default:
+      break;
+
+    } // switch
+
+    if ( breakLoop )
+    {
+
+      return false;
+
+    }
+
+  }
+
+  glm::dvec3 p ( 0.0, 0.0, eyeDist );
+
+  std::cout << "Zoom factor: " << focalPlane_ << std::endl;
+
+  std::cout << "Expected Output: " << std::endl;
+
+  // 2d to 1d index calculation
+  auto index = [ ]( auto &x, auto &y ) -> auto {
+                 return y * imgSize + x;
+               };
+
+  //
+  // build calculated image
+  //
+  std::vector< char > image = buildImage( imgSize, imgSize, p, focalPlane_, true );
+
+  for ( unsigned y = 0; y < imgSize; ++y )
+  {
+
+    for ( unsigned x = 0; x < imgSize; ++x )
+    {
+
+      char c = image[ index( x, y ) ];
+      std::cout << c << ' ';
+
+    }
+
+    std::cout << std::endl;
+
+  }
+
+  std::cout << std::endl;
+
+  std::cout << "Neural Net Output: " << std::endl;
+
+
+  //
+  // build expected image
+  //
+  image = buildImage( imgSize, imgSize, p, focalPlane_, false );
+
+  for ( unsigned y = 0; y < imgSize; ++y )
+  {
+
+    for ( unsigned x = 0; x < imgSize; ++x )
+    {
+
+      char c = image[ index( x, y ) ];
+      std::cout << c << ' ';
+
+    }
+
+    std::cout << std::endl;
+
+  }
+
+  std::cout << std::endl;
+
+  std::cout << "'w' : zoom in, 's' : zoom out, 'q' : quit" << std::endl;
+
+  return true;
+
+} // IntersectionApp::onUserLoop
+
+
+
+////////////////////////////////////////////////////////////////////
 /// \brief IntersectionApp::buildImage
 /// \param w
 /// \param h
@@ -335,8 +306,7 @@ IntersectionApp::buildImage(
                             const unsigned    width,
                             const unsigned    height,
                             const glm::dvec3 &eye,
-                            const double      fDist,
-                            net::Net         *pNet,
+                            const double      fPlane,
                             bool              exact
                             )
 {
@@ -354,7 +324,7 @@ IntersectionApp::buildImage(
       glm::dvec2 uv = glm::dvec2( x * 1.0 / width, y * 1.0 / height );
 
       glm::dvec3 up = glm::dvec3( 0.0, 1.0, 0.0 ); // up axis of world
-      double f      = fDist;                       // distance between eye and focal plane
+      double f      = fPlane;                      // distance between eye and focal plane
 
       // camera basis
       glm::dvec3 w = glm::normalize( -eye );
@@ -373,7 +343,7 @@ IntersectionApp::buildImage(
       inputVals_[ 1 ] = d.y;
       inputVals_[ 2 ] = d.z;
 
-      pNet->feedForward( inputVals_ );
+      upNet_->feedForward( inputVals_ );
 
       if ( exact )
       {
@@ -384,7 +354,7 @@ IntersectionApp::buildImage(
       else
       {
 
-        pNet->getResults ( &result );
+        upNet_->getResults ( &result );
 
       }
 

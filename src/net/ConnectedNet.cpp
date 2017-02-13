@@ -86,6 +86,14 @@ NetImpl::NetImpl(
   , m_recentAverageSmoothingFactor( errorSmoothing )
 {
 
+  // net doesn't make sense without at least input and output layers
+  if ( topology.size() < 2 )
+  {
+
+    throw std::runtime_error( "Must provide a topology with at least 2 layers" );
+
+  }
+
   unsigned numLayers = topology.size( );
 
   for ( unsigned layerNum = 0; layerNum < numLayers; ++layerNum )
