@@ -2,9 +2,17 @@ cmake_minimum_required( VERSION 3.1.0 )
 project( NetExamples )
 
 option( STRICT_FLAGS "Use strict compile flags on Unix machines" OFF )
+option( UNIT_TESTS   "Compile net unit tests"                    OFF )
 
 set( SRC_DIR    ${PROJECT_SOURCE_DIR}/src        )
 set( THIRDPARTY ${PROJECT_SOURCE_DIR}/thirdparty )
+
+
+if ( UNIT_TESTS )
+
+  include( ${SRC_DIR}/testing/GoogleTest.cmake )
+
+endif( UNIT_TESTS )
 
 # strict compile flags
 if ( NOT MSVC AND STRICT_FLAGS )
@@ -54,6 +62,14 @@ foreach( EXAMPLE ${EXAMPLE_NAMES} )
   set_property              ( TARGET ${EXEC_NAME} PROPERTY CXX_STANDARD 14  )
 
 endforeach( EXAMPLE )
+
+
+if ( UNIT_TESTS )
+
+  include( ${SRC_DIR}/testing/Testing.cmake )
+
+endif( UNIT_TESTS )
+
 
 
 
