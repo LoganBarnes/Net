@@ -57,8 +57,6 @@ private:
   std::vector< double > inputVals_;
   std::vector< double > targetVals_;
 
-
-
 };
 
 
