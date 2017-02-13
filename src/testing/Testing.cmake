@@ -19,6 +19,7 @@ foreach( TEST ${TEST_NAMES} )
   target_include_directories( ${EXEC_NAME} SYSTEM PUBLIC ${THIRDPARTY}/glm ${GMOCK_INCLUDE_DIRS} )
   target_include_directories( ${EXEC_NAME} PUBLIC ${INC_DIRS}                                    )
   target_link_libraries     ( ${EXEC_NAME}        ${NET_LIBRARY} ${GMOCK_BOTH_LIBS}              )
+  add_dependencies          ( ${EXEC_NAME}        ${NET_LIBRARY} ${GMOCK_BOTH_LIBS}              )
   set_property              ( TARGET ${EXEC_NAME} PROPERTY CXX_STANDARD 14                       )
 
 endforeach( TEST )
