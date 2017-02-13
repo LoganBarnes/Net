@@ -21,8 +21,6 @@ This should create three executables in the build directory:
 * runAddition
 * runIntersection
 
-**Note**: This program has only been tested on OS X thus far.
-
 
 Executables
 -----------
