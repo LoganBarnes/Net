@@ -12,8 +12,8 @@ Build via CMake
 # project root directory
 mkdir build
 cd build
-cmake ..
-cmake --build .
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --config Release
 ```
 
 This should create three executables in the build directory:
