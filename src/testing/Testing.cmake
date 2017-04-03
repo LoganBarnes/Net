@@ -1,25 +1,76 @@
 
-################################################
+####################################################
 # add test cases
-################################################
-
-
+####################################################
 set(
-    TEST_NAMES
+    TEST_SOURCE
 
-    ExampleUnitTests
+    ${SRC_DIR}/testing/ExampleUnitTests.cpp
     )
 
-foreach( TEST ${TEST_NAMES} )
 
-  set( EXEC_NAME run${TEST} )
+####################################################
+# Download and unpack googletest at configure time
+####################################################
+configure_file(
+               ${THIRDPARTY}/cmake/CMakeLists.txt.googletest
+               ${CMAKE_CURRENT_BINARY_DIR}/googletest-download/CMakeLists.txt
+               )
+execute_process(
+                COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+                RESULT_VARIABLE result
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download
+                )
+if( result )
+  message( FATAL_ERROR "CMake step for googletest failed: ${result}" )
+endif( )
 
-  add_executable( ${EXEC_NAME} ${SRC_DIR}/testing/${TEST}.cpp )
+execute_process(
+                COMMAND ${CMAKE_COMMAND} --build .
+                RESULT_VARIABLE result
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download
+                )
+if( result )
+  message( FATAL_ERROR "Build step for googletest failed: ${result}" )
+endif( )
 
-  target_include_directories( ${EXEC_NAME} SYSTEM PUBLIC ${THIRDPARTY}/glm ${GMOCK_INCLUDE_DIRS} )
-  target_include_directories( ${EXEC_NAME} PUBLIC ${INC_DIRS}                                    )
-  target_link_libraries     ( ${EXEC_NAME}        ${NET_LIBRARY} ${GMOCK_BOTH_LIBS}              )
-  add_dependencies          ( ${EXEC_NAME}        ${NET_LIBRARY} ${GMOCK_BOTH_LIBS}              )
-  set_property              ( TARGET ${EXEC_NAME} PROPERTY CXX_STANDARD 14                       )
 
-endforeach( TEST )
+
+####################################################
+# Build googletest source with rest of project
+####################################################
+
+# Prevent overriding the parent project's compiler/linker settings on Windows
+set( gtest_force_THIRDPARTY_crt ON CACHE BOOL "" FORCE )
+
+# Add googlemock directly to the project build
+add_subdirectory(
+                 ${CMAKE_BINARY_DIR}/googletest-src/googlemock
+                 ${CMAKE_BINARY_DIR}/googletest-build
+                 )
+
+# gmock and gtest header dirs
+set(
+    GMOCK_INCLUDE_DIRS
+
+    ${CMAKE_BINARY_DIR}/googletest-src/googletest/include
+    ${CMAKE_BINARY_DIR}/googletest-src/googlemock/include
+    )
+
+
+####################################################
+# Build googletest source with rest of project
+####################################################
+set( TEST_NAME test${PROJECT_NAME} )
+
+add_executable( ${TEST_NAME} ${TEST_SOURCE} )
+
+target_include_directories( ${TEST_NAME} SYSTEM PUBLIC ${THIRDPARTY}/glm ${GMOCK_INCLUDE_DIRS} )
+target_include_directories( ${TEST_NAME} PUBLIC ${INC_DIRS}                                    )
+target_link_libraries     ( ${TEST_NAME}        ${NET_LIBRARY} gmock gmock_main                )
+add_dependencies          ( ${TEST_NAME}        ${NET_LIBRARY} gmock gmock_main                )
+set_property              ( TARGET ${TEST_NAME} PROPERTY CXX_STANDARD 14                       )
+
+if ( INTENSE_FLAGS )
+  set_target_properties( ${EXEC_NAME} PROPERTIES COMPILE_FLAGS ${INTENSE_FLAGS} )
+endif( )

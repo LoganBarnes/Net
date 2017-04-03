@@ -8,21 +8,15 @@ set( SRC_DIR    ${PROJECT_SOURCE_DIR}/src        )
 set( THIRDPARTY ${PROJECT_SOURCE_DIR}/thirdparty )
 
 
-if ( UNIT_TESTS )
-
-  include( ${SRC_DIR}/testing/GoogleTest.cmake )
-
-endif( UNIT_TESTS )
-
 # strict compile flags
 if ( NOT MSVC AND STRICT_FLAGS )
 
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wextra -Wcast-align -Wcast-qual"            )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2"      )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winit-self -Wmissing-declarations -Wmissing-include-dirs"   )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wold-style-cast -Woverloaded-virtual -Wredundant-decls"     )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-overflow=5" )
-  set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wswitch-default -Wundef -Werror -Wno-unused"                )
+  set( INTENSE_FLAGS "${INTENSE_FLAGS} -pedantic -Wall -Wextra -Wcast-align -Wcast-qual"            )
+  set( INTENSE_FLAGS "${INTENSE_FLAGS} -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2"      )
+  set( INTENSE_FLAGS "${INTENSE_FLAGS} -Winit-self -Wmissing-declarations -Wmissing-include-dirs"   )
+  set( INTENSE_FLAGS "${INTENSE_FLAGS} -Wold-style-cast -Woverloaded-virtual -Wredundant-decls"     )
+  set( INTENSE_FLAGS "${INTENSE_FLAGS} -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-overflow=5" )
+  set( INTENSE_FLAGS "${INTENSE_FLAGS} -Wswitch-default -Wundef -Werror -Wno-unused"                )
 
 endif( )
 
@@ -63,6 +57,10 @@ foreach( EXAMPLE ${EXAMPLE_NAMES} )
   target_link_libraries     ( ${EXEC_NAME}        ${NET_LIBRARY}            )
   add_dependencies          ( ${EXEC_NAME}        ${NET_LIBRARY}            )
   set_property              ( TARGET ${EXEC_NAME} PROPERTY CXX_STANDARD 14  )
+
+  if ( INTENSE_FLAGS )
+    set_target_properties( ${EXEC_NAME} PROPERTIES COMPILE_FLAGS ${INTENSE_FLAGS} )
+  endif( )
 
 endforeach( EXAMPLE )
 
