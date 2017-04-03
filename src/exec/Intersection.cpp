@@ -12,7 +12,6 @@
 #include <chrono>
 #include <string>
 
-#include "glm/gtx/string_cast.hpp"
 #include "Intersections.hpp"
 
 #include "App.hpp"

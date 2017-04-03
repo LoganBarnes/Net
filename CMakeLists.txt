@@ -4,8 +4,15 @@ project( NetExamples )
 option( STRICT_FLAGS "Use strict compile flags on Unix machines" OFF )
 option( UNIT_TESTS   "Compile net unit tests"                    OFF )
 
-set( SRC_DIR    ${PROJECT_SOURCE_DIR}/src        )
-set( THIRDPARTY ${PROJECT_SOURCE_DIR}/thirdparty )
+set( SRC_DIR    ${PROJECT_SOURCE_DIR}/src   )
+set( CMAKE_DIR  ${PROJECT_SOURCE_DIR}/cmake )
+
+# function for downloading projects during configuration
+include( ${CMAKE_DIR}/DownloadProject.cmake )
+
+DownloadProject( ${CMAKE_DIR}/CMakeLists.txt.glm glm )
+
+set( GLM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/glm-src )
 
 
 # strict compile flags
@@ -22,6 +29,7 @@ endif( )
 
 
 add_subdirectory( ${SRC_DIR}/net )
+
 
 set(
     SRC_FILES
@@ -52,7 +60,7 @@ foreach( EXAMPLE ${EXAMPLE_NAMES} )
 
   add_executable( ${EXEC_NAME} ${SRC_DIR}/exec/${EXAMPLE}.cpp ${SRC_FILES}  )
 
-  target_include_directories( ${EXEC_NAME} SYSTEM PUBLIC ${THIRDPARTY}/glm  )
+  target_include_directories( ${EXEC_NAME} SYSTEM PUBLIC ${GLM_INCLUDE_DIR} )
   target_include_directories( ${EXEC_NAME} PUBLIC ${INC_DIRS}               )
   target_link_libraries     ( ${EXEC_NAME}        ${NET_LIBRARY}            )
   add_dependencies          ( ${EXEC_NAME}        ${NET_LIBRARY}            )
@@ -67,7 +75,7 @@ endforeach( EXAMPLE )
 
 if ( UNIT_TESTS )
 
-  include( ${SRC_DIR}/testing/Testing.cmake )
+  include( ${CMAKE_DIR}/Testing.cmake )
 
 endif( UNIT_TESTS )
 
