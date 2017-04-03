@@ -8,12 +8,10 @@ Build via CMake
 ---------------
 
 ```bash
-# from command line in
-# project root directory
-mkdir build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-cmake --build . --config Release
+# from command line in project root directory
+cmake -E make_directory build
+cmake -E chdir build cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -E chdir build cmake --build . --config Release
 ```
 
 This should create three executables in the build directory:
